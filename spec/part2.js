@@ -108,8 +108,11 @@
       });
 
       it('should work when no callback is provided', function() {
+        // console.log(1)
         expect(_.every([true, true, true])).to.be.true;
+        // console.log(2)
         expect(_.every([true, true, false])).to.be.false;
+        // console.log(3)
         expect(_.every([false, false, false])).to.be.false;
       });
     });

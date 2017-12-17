@@ -100,27 +100,24 @@
 
   // Produce a duplicate-free version of the array.
   _.uniq = function(array, isSorted, iterator) {
-    var copy = array.slice(0);
-    var uniq = [];
+    var copy = array.slice();
+    var uniqElements = [];
     var transformed = [];
-    if (isSorted) {
-      for (var i = 0; i < array.length; i++) {
-        if (!transformed.includes(iterator(array[i]))) {
-          uniq.push(array[i]);
-          transformed.push(iterator(array[i]));
-        }
-      }
-      return uniq;
+    if (!isSorted) {
+      copy.sort();
+    } else {
+      _.each(copy, function(item) {
+        if (transformed.indexOf(iterator(item)) === -1)
+        transformed.push(iterator(item));
+      });
+      return copy.slice(0, transformed.length);
     }
-    copy.sort(function(a,b) {
-      return a - b;
+    _.each(copy, function(item) {
+      if (uniqElements.indexOf(item) === -1) {
+        uniqElements.push(item);
+      }
     })
-    for (var i = 0; i < copy.length; i++) {
-      if (copy[i] !== copy[i + 1]) {
-        uniq.push(copy[i])
-      }
-    }
-    return uniq;
+    return uniqElements;
   };
 
 
@@ -176,13 +173,23 @@
   //          No accumulator is given so the first element is used.
   _.reduce = function(collection, iterator, accumulator) {
     var count = 0;
-    if (accumulator === undefined) {
-      accumulator = collection[0];
-      count++;
-    }
-    while (count < collection.length) {
-      accumulator = iterator(accumulator, collection[count]);
-      count++
+    if (Array.isArray(collection)) {
+      if (accumulator === undefined) {
+        accumulator = collection[0];
+        count++;
+      }
+      while (count < collection.length) {
+        accumulator = iterator(accumulator, collection[count]);
+        count++
+      }
+    } else {
+      for (var key in collection) {
+        if (accumulator === undefined) {
+          accumulator = collection[key];
+        } else {
+          accumulator = iterator(accumulator, collection[key]);
+        }
+      }
     }
     return accumulator;
   };
@@ -203,6 +210,37 @@
   // Determine whether all of the elements match a truth test.
   _.every = function(collection, iterator) {
     // TIP: Try re-using reduce() here.
+    if (collection.length === 0) {
+      return true;
+    }
+    if (iterator === undefined) {
+      iterator = _.identity;
+    }
+    var count = 0;
+    return _.reduce(collection, function(accumulator, current) {
+      // console.log('accumulator:', accumulator)
+      // console.log('!iterator(accumulator):',!iterator(accumulator));
+      if (!iterator(accumulator)) {
+        // (console.log('accumulator value not true'))
+        return false;
+      }
+      count++
+      // console.log('accumulator:', accumulator)
+      // console.log('count:',count)
+      if (count !== collection.length) {
+        // console.log('not on last iteration')
+        accumulator = current;
+        return accumulator;
+      }
+      // console.log('before final return iterator(current):',iterator(current));
+      // console.log(iterator)
+      if (iterator(current)) {
+        // console.log('final current is true')
+        return true;
+      } else {
+        return false;
+      }
+    },collection[0])
   };
 
   // Determine whether any of the elements pass a truth test. If no iterator is
