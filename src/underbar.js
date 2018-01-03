@@ -172,26 +172,42 @@
   //   }); // should be 5, regardless of the iterator function passed in
   //          No accumulator is given so the first element is used.
   _.reduce = function(collection, iterator, accumulator) {
-    var count = 0;
-    if (Array.isArray(collection)) {
-      if (accumulator === undefined) {
-        accumulator = collection[0];
-        count++;
-      }
-      while (count < collection.length) {
-        accumulator = iterator(accumulator, collection[count]);
-        count++
-      }
-    } else {
-      for (var key in collection) {
-        if (accumulator === undefined) {
-          accumulator = collection[key];
-        } else {
-          accumulator = iterator(accumulator, collection[key]);
-        }
-      }
+    //use each to create accumulator 
+       // accumulator = accumulator || collection[0];
+
+    var defined = true;
+    if (accumulator === undefined) {
+      accumulator = collection[0];
+      defined = false;
     }
+    _.each(collection, function(item) {
+      if (defined) {
+        accumulator = iterator(accumulator, item);
+      }
+      defined = true;
+    })
     return accumulator;
+
+    // var count = 0;
+    // if (Array.isArray(collection)) {
+    //   if (accumulator === undefined) {
+    //     accumulator = collection[0];
+    //     count++;
+    //   }
+    //   while (count < collection.length) {
+    //     accumulator = iterator(accumulator, collection[count]);
+    //     count++;
+    //   }
+    // } else {
+    //   for (var key in collection) {
+    //     if (accumulator === undefined) {
+    //       accumulator = collection[key];
+    //     } else {
+    //       accumulator = iterator(accumulator, collection[key]);
+    //     }
+    //   }
+    // }
+    // return accumulator;
   };
 
   // Determine if the array or object contains a given value (using `===`).
@@ -210,45 +226,25 @@
   // Determine whether all of the elements match a truth test.
   _.every = function(collection, iterator) {
     // TIP: Try re-using reduce() here.
-    if (collection.length === 0) {
-      return true;
-    }
-    if (iterator === undefined) {
-      iterator = _.identity;
-    }
-    var count = 0;
+    iterator = iterator || _.identity;
     return _.reduce(collection, function(accumulator, current) {
-      // console.log('accumulator:', accumulator)
-      // console.log('!iterator(accumulator):',!iterator(accumulator));
-      if (!iterator(accumulator)) {
-        // (console.log('accumulator value not true'))
-        return false;
-      }
-      count++
-      // console.log('accumulator:', accumulator)
-      // console.log('count:',count)
-      if (count !== collection.length) {
-        // console.log('not on last iteration')
-        accumulator = current;
-        return accumulator;
-      }
-      // console.log('before final return iterator(current):',iterator(current));
-      // console.log(iterator)
-      if (iterator(current)) {
-        // console.log('final current is true')
-        return true;
-      } else {
-        return false;
-      }
-    },collection[0])
+      return !!(accumulator && iterator(current));  
+    },true)
   };
 
   // Determine whether any of the elements pass a truth test. If no iterator is
   // provided, provide a default one
   _.some = function(collection, iterator) {
     // TIP: There's a very clever way to re-use every() here.
+    iterator = iterator || _.identity;
+    return !_.every(collection, function(item) {
+      return !!!iterator(item);
+    });
   };
-
+//         S   E  Op.E  op.t  Both
+// T T T   O   O   X     X     O
+// T F T   O   X   O     X     O
+// F F F   X   X   O     O     X
 
   /**
    * OBJECTS
@@ -269,11 +265,30 @@
   //     bla: "even more stuff"
   //   }); // obj1 now contains key1, key2, key3 and bla
   _.extend = function(obj) {
+    for (var i = 0; i < arguments.length; i++)
+      // console.log('arguments[i]:', arguments[i]);
+      for (var key in arguments[i]) {
+        obj[key] = arguments[i][key];
+      }
+    return obj;
+    // _.each(arguments, function(argument) {
+    //   for (var key in argument) {
+    //     obj[key] = argument[key];
+    //   }
+    //   return obj;
+    // })
   };
 
   // Like extend, but doesn't ever overwrite a key that already
   // exists in obj
   _.defaults = function(obj) {
+    for (var i = 0; i < arguments.length; i++)
+      // console.log('arguments[i]:', arguments[i]);
+      for (var key in arguments[i]) {
+        if (!obj.hasOwnProperty(key))
+        obj[key] = arguments[i][key];
+      }
+    return obj;
   };
 
 
@@ -317,7 +332,89 @@
   // already computed the result for the given argument and return that value
   // instead if possible.
   _.memoize = function(func) {
+    var memos = {};
+    return function() {
+      if (memos.hasOwnProperty(JSON.stringify(arguments))) {
+        return memos[JSON.stringify(arguments)];
+      }
+      memos[JSON.stringify(arguments)] = func.apply(this, arguments);
+      return memos[JSON.stringify(arguments)];
+    }
   };
+
+    // var isNotInMemories = true;
+    // var memories = [];
+    // // var mySet = new Set();
+    // if (!memories.includes(func.apply(this, arguments))) {
+    //   isNotInMemories = false;
+    // }
+
+    // // TIP: We'll return a new function that delegates to the old one, but only
+    // // if it hasn't been called before.
+    // return function() {
+    //   if (isNotInMemories) {
+    //     memories.push(func.apply(this, arguments));
+    //     // isNotInMemories = false;
+    //     // TIP: .apply(this, arguments) is the standard way to pass on all of the
+    //     // infromation from one function call to another.
+    //     // memories.push(func.apply(this, arguments));
+
+    //     // // var unique = _.uniq(memories);
+    //     // // console.log('memories:',memories, 'unique:', unique)
+    //     // // if (unique.length !== memories.length) {
+    //     //   alreadyCalled = true;
+    //     //   console.log('memories:',memories)
+    //     //   memories = _.uniq(memories)
+    //     //   console.log('memories:',memories)
+    //     // }
+        
+    //   }
+    //   return memories[memories.length - 1];
+    //   // The new function always returns the originally computed result.
+      
+    // };
+    // var memories = [];
+    // memories.push(func.apply(this, arguments))
+    // var unique = _.uniq(memories);
+    // if (unique.length !== memories.length) {
+    //   memories.pop();
+    // }
+    // return memories[memories.length - 1];
+    // var memories = new Set();
+    // // var mLength = memories.size;
+    // var setSize = memories.size;
+    // var result;
+    // // if (!memories.has(func.apply(this, arguments))) {
+      
+    
+    // memories.add(func.apply(this, arguments));
+    // return function() {
+    //   if (memories.size > setSize) {
+    //     console.log('memories:',memories, 'setSize:', setSize, 'actual set size:',memories.size);
+    //     return _.each(memories, func[this, arguments])
+    //   }
+      
+    // }
+      // if (memories.size !== mLength) {
+        // return [...memories][memories.length - 1]
+      // }
+    // return [...memories][memories.length - 1]
+      // var intersection = new Set([...set1].filter(x => set2.has(x)));
+      // return memories[memories.length - 1];
+    // }
+    
+    // var memories = [];
+    // return function() {
+    //   if (!memories.includes(func)) {
+    //     // TIP: .apply(this, arguments) is the standard way to pass on all of the
+    //     // infromation from one function call to another.
+    //     memories.push(func.apply(this, arguments));
+    //   }
+    //   // The new function always returns the originally computed result.
+    //   return memories[memories.length - 1];
+    // }
+    // return memories[memories.length - 1];
+  // };
 
   // Delays a function for the given number of milliseconds, and then calls
   // it with the arguments supplied.
@@ -326,6 +423,11 @@
   // parameter. For example _.delay(someFunction, 500, 'a', 'b') will
   // call someFunction('a', 'b') after 500ms
   _.delay = function(func, wait) {
+    // console.log(arguments)
+    var args = [...arguments].slice(2);
+    return setTimeout(function() {
+      func.apply(this, args);
+    }, wait);
   };
 
 
@@ -340,6 +442,16 @@
   // input array. For a tip on how to make a copy of an array, see:
   // http://mdn.io/Array.prototype.slice
   _.shuffle = function(array) {
+    var shuffled = [];
+    var randomIndices = new Set();
+    while (randomIndices.size < array.length) {
+      randomIndices.add(Math.floor(Math.random() * array.length));
+    }
+    randomIndices = [...randomIndices];
+    _.each(array, function(item, index) {
+      shuffled[randomIndices[index]] = array[index];
+    });
+    return shuffled;
   };
 
 
