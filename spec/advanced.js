@@ -21,6 +21,7 @@
     });
 
     describe('invoke, when provided a method name', function() {
+      console.log('success')
       checkForNativeMethods(function() {
         _.invoke(['dog', 'cat'], 'toUpperCase');
       })

@@ -100,6 +100,8 @@
 
   // Produce a duplicate-free version of the array.
   _.uniq = function(array, isSorted, iterator) {
+
+
     var copy = array.slice();
     var uniqElements = [];
     var transformed = [];
@@ -229,7 +231,7 @@
     iterator = iterator || _.identity;
     return _.reduce(collection, function(accumulator, current) {
       return !!(accumulator && iterator(current));  
-    },true)
+    },true);
   };
 
   // Determine whether any of the elements pass a truth test. If no iterator is
@@ -238,7 +240,7 @@
     // TIP: There's a very clever way to re-use every() here.
     iterator = iterator || _.identity;
     return !_.every(collection, function(item) {
-      return !!!iterator(item);
+      return !iterator(item);
     });
   };
 //         S   E  Op.E  op.t  Both
@@ -454,6 +456,32 @@
     return shuffled;
   };
 
+  //  _.shuffle = function(array) {
+  //   var array = array.slice();
+  //   var currentIndex = array.length; 
+  //   var temporaryValue;
+  //   console.log(array + " The Array");
+  //   var randomIndex;
+  //     while (0 !== currentIndex) {
+  //       randomIndex = Math.floor(Math.random() * currentIndex);
+  //       console.log("randomIndex:", randomIndex);
+  //       console.log("currentIndex",currentIndex);
+  //       currentIndex -= 1;
+  //       // console.log('currentIndex -= 1:',currentIndex -= 1)
+  //       temporaryValue = array[currentIndex];
+  //       console.log('temporaryValue = array[currentIndex]:', temporaryValue = array[currentIndex]);
+  //       array[currentIndex] = array[randomIndex];
+  //       console.log('array[currentIndex] = array[randomIndex]',array[currentIndex] = array[randomIndex]);
+  //       array[randomIndex] = temporaryValue;
+  //       console.log('array[randomIndex] = temporaryValue', array[randomIndex] = temporaryValue);
+  //       console.log('array:',array);
+  //     }
+  //   console.log('final array:', array);
+  //   return array;
+   
+   
+  // };
+
 
   /**
    * ADVANCED
@@ -466,7 +494,27 @@
   // Calls the method named by functionOrKey on each value in the list.
   // Note: You will need to learn a bit about .apply to complete this.
   _.invoke = function(collection, functionOrKey, args) {
-  };
+    if (typeof functionOrKey === 'string') {
+      return _.map(collection, function(item) {
+        return item[functionOrKey]();
+      });
+    }
+    return _.map(collection, function(item) {
+      return functionOrKey.call(item);
+    });
+  }; 
+    
+
+    // var isMethod;
+    //  if (typeof functionOrKey === 'string') {
+    //   isMethod = false;
+    //  }
+    // return _.map(functionOrKey, function(value) {
+    //   var func = isMethod ? functionOrKey : value[functionOrKey];
+    //   return func == null ? func : func.apply(value, collection);
+    // });
+    
+  
 
   // Sort the object's values by a criterion produced by an iterator.
   // If iterator is a string, sort objects by that property with the name
@@ -487,7 +535,17 @@
   // The new array should contain all elements of the multidimensional array.
   //
   // Hint: Use Array.isArray to check if something is an array
+  // [3, [[[4]]]]
   _.flatten = function(nestedArray, result) {
+    result = [];
+    _.each(nestedArray, function(item) {
+      if (Array.isArray(item)) {
+        result.push(..._.flatten(item));
+      } else {
+        result.push(item);
+      }
+    });
+    return result;
   };
 
   // Takes an arbitrary number of arrays and produces an array that contains
